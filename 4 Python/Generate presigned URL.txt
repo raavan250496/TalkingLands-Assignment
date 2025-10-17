@@ -1,0 +1,1 @@
+python upload_to_s3.py --file document.pdf --bucket docs-bucket --presigned-url

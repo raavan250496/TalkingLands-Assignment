@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone') {
+            steps { git 'https://developers-git-repo-link-for-nodejs-app.git' }
+        }
+        stage('Build') {
+            steps { sh 'npm install' }
+        }
+        stage('Test') {
+            steps { sh 'npm test' }
+        }
+        stage('Package') {
+            steps {
+                sh 'docker build -t nodejs-app:${BUILD_NUMBER} .'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'kubectl apply -f deployment.yml'
+                sh 'kubectl set image deployment/nodejs-app nodejs-app=nodejs-app:${BUILD_NUMBER}'
+                sh 'kubectl rollout status deployment/nodejs-app --timeout=300s'
+            }
+        }
+    }
+    post {
+        failure {
+            sh 'kubectl rollout undo deployment/nodejs-app'
+        }
+    }
+}
